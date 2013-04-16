@@ -166,4 +166,44 @@ DIFF
 DIFF
             , $builder->generateUnifiedDiff());
     }
+
+    public function testAppendLineMoreThanOnce()
+    {
+        $builder = new PatchBuilder("foo\nfoo\nbar\nbaz\nbaz\n");
+        $builder->appendToLine(3, array("boing"));
+        $builder->appendToLine(3, array("baz"));
+        $builder->appendToLine(3, array("bar"));
+
+        $this->assertEquals(<<<DIFF
+@@ -1,5 +1,8 @@
+ foo
+ foo
+ bar
++boing
++baz
++bar
+ baz
+ baz
+DIFF
+            , $builder->generateUnifiedDiff());
+    }
+
+    public function testAppendLineAtEndMoreThanOnce()
+    {
+        $builder = new PatchBuilder("foo\nfoo\nbar\nbaz\nbaz\n");
+        $builder->appendToLine(5, array("boing"));
+        $builder->appendToLine(5, array("baz"));
+        $builder->appendToLine(5, array("bar"));
+
+        $this->assertEquals(<<<DIFF
+@@ -3,3 +3,6 @@
+ bar
+ baz
+ baz
++boing
++baz
++bar
+DIFF
+            , $builder->generateUnifiedDiff());
+    }
 }

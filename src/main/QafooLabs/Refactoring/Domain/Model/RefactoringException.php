@@ -45,4 +45,17 @@ class RefactoringException extends Exception
             $range->getStart(), $range->getEnd()
         ));
     }
+
+    static public function rangeIsNotOutsideMethod(LineRange $range)
+    {
+        return new self(sprintf(
+            'The range %d-%d is not outside of methods.',
+            $range->getStart(), $range->getEnd()
+        ));
+    }
+
+    static public function illegalFieldName($name)
+    {
+        return new self(sprintf('The given field name "%s" is not valid in PHP.', $name));
+    }
 }

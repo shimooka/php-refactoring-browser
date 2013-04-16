@@ -19,7 +19,7 @@ class AppendOperation implements Operation
     private $originalLine;
     private $appendLines;
 
-    public function __construct($originalLine, $appendLines)
+    public function __construct($originalLine, array $appendLines)
     {
         $this->originalLine = $originalLine;
         $this->appendLines = $appendLines;
@@ -28,5 +28,10 @@ class AppendOperation implements Operation
     public function perform(Hunk $hunk)
     {
         return $hunk->appendLines($this->originalLine, $this->appendLines);
+    }
+
+    public function merge(array $mergeLines)
+    {
+        $this->appendLines = array_merge($this->appendLines, $mergeLines);
     }
 }

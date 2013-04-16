@@ -88,9 +88,13 @@ class PatchBuilder
             throw new \InvalidArgumentException("No lines were passed to the append operation. At least one required.");
         }
 
-        $this->assertValidOriginalLine($originalLine);
+        $this->assertValidLineNumber($originalLine);
 
-        $this->operations[$originalLine] = new AppendOperation($originalLine, $lines);
+        if (isset($this->operations[$originalLine])) {
+            $this->operations[$originalLine]->merge($lines);
+        } else {
+            $this->operations[$originalLine] = new AppendOperation($originalLine, $lines);
+        }
     }
 
     /**
@@ -153,13 +157,18 @@ class PatchBuilder
         }
     }
 
-    private function assertValidOriginalLine($originalLine)
+    private function assertValidLineNumber($originalLine)
     {
         Assertion::integer($originalLine);
 
         if ( $originalLine !== 0 && ! isset($this->lines[$originalLine - 1])) {
             throw new UnknownLineException($originalLine);
         }
+    }
+
+    private function assertValidOriginalLine($originalLine)
+    {
+        $this->assertValidLineNumber($originalLine);
 
         if (isset($this->operations[$originalLine])) {
             throw new \RuntimeException(sprintf("Adding more than one operation to line %d is not allowed.", $originalLine));

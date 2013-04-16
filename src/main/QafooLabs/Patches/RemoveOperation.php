@@ -26,4 +26,9 @@ class RemoveOperation implements Operation
     {
         return $hunk->removeLine($this->originalLine);
     }
+
+    public function merge(array $mergeLines)
+    {
+        throw \BadMethodCallException('not implemented yet');
+    }
 }

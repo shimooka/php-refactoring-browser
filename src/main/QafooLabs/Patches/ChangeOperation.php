@@ -28,4 +28,9 @@ class ChangeOperation implements Operation
     {
         return $hunk->changeLines($this->originalLine, $this->newLines);
     }
+
+    public function merge(array $mergeLines)
+    {
+        $this->newLines = array_merge($this->newLines, $mergeLines);
+    }
 }

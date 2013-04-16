@@ -109,4 +109,23 @@ PHP
 CODE
         );
     }
+
+    /**
+     * @group integration
+     */
+    public function testRefactorSimpleMethod_ThrowRangeIsNotInsideMethod()
+    {
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'The range 3-3 is not inside one single method.');
+        $this->refactoring->refactor(new File("foo.php", <<<'PHP'
+<?php
+class Foo
+{
+    public function main()
+    {
+        echo "Hello World";
+    }
+}
+PHP
+            ), LineRange::fromString("3-3"), "extract");
+    }
 }

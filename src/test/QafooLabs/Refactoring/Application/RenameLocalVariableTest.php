@@ -69,4 +69,46 @@ PHP
             new Variable('$this->foo')
         );
     }
+
+    /**
+     * @group integration
+     */
+    public function testRenameRangeOutsideOfMethod_ThrowException()
+    {
+        \Phake::when($this->codeAnalysis)->isInsideMethod(\Phake::anyParameters())->thenReturn(false);
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'The range 6-6 is not inside one single method.');
+        $this->refactoring->refactor(
+            new File("foo.php", ''), 6,
+            new Variable('$helloWorld'),
+            new Variable('$var')
+        );
+    }
+
+    /**
+     * @group integration
+     */
+    public function testRenameVariableNotInRange_ThrowException()
+    {
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Could not find variable "$hello" in line range 6-6.');
+        $buffer = \Phake::mock('QafooLabs\Refactoring\Domain\Model\EditorBuffer');
+
+        \Phake::when($this->scanner)->scanForVariables(\Phake::anyParameters())->thenReturn(
+            new DefinedVariables(array('helloWorld' => array(6)))
+        );
+        \Phake::when($this->editor)->openBuffer(\Phake::anyParameters())->thenReturn($buffer);
+        \Phake::when($this->codeAnalysis)->findMethodRange(\Phake::anyParameters())->thenReturn(LineRange::fromSingleLine(6));
+
+        $this->refactoring->refactor(new File("foo.php", <<<'PHP'
+<?php
+class Foo
+{
+    public function main()
+    {
+        $helloWorld = 'bar';
+    }
+}
+PHP
+            ), 6, new Variable('$hello'), new Variable('$var'));
+    }
+
 }

@@ -122,7 +122,18 @@ class EditingSession
     {
         $paramLine = $this->implodeVariables($method->arguments());
 
-        return sprintf('private%sfunction %s(%s)', $method->isStatic() ? ' static ' : ' ', $method->getName(), $paramLine);
+        return sprintf(
+            '%s%s%sfunction %s(%s)',
+            $method->isPrivate() ? 'private ' : (
+                $method->isProtected() ? 'protected ' : (
+                    $method->isPublic() ? 'public ' : ''
+                )
+            ),
+            $method->isStatic() ? 'static ' : '',
+            $method->isFinal() ? 'final ' : '',
+            $method->getName(),
+            $paramLine
+        );
     }
 
     private function implodeVariables($variableNames)
@@ -143,4 +154,12 @@ class EditingSession
     {
         return str_repeat(' ', $number);
     }
+
+    public function replaceLineWithProperty(LineRange $range, Field $newField)
+    {
+        $this->buffer->replace($range, array(
+            $this->whitespace(4) . 'private $' . $newField->getName() . ';'
+        ));
+    }
+
 }

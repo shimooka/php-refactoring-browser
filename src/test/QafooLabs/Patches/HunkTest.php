@@ -145,4 +145,23 @@ HUNK
 HUNK
             , (string)$newHunk);
     }
+
+    public function testDuplicatedOperationForLineAppend()
+    {
+        $hunk = Hunk::forLine(3, array("foo", "foo", "bar", "baz", "baz"));
+        $newHunk = $hunk->appendLines(3, array("bar"));
+        $newHunk = $hunk->appendLines(3, array("baz"));
+
+        $this->assertEquals(<<<'HUNK'
+@@ -1,5 +1,6 @@
+ foo
+ foo
+ bar
++baz
+ baz
+ baz
+HUNK
+            , (string)$newHunk);
+    }
+
 }

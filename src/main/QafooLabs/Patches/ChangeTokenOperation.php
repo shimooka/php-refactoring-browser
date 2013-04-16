@@ -30,4 +30,9 @@ class ChangeTokenOperation implements Operation
     {
         return $hunk->changeToken($this->originalLine, $this->oldToken, $this->newToken);
     }
+
+    public function merge(array $mergeLines)
+    {
+        throw \BadMethodCallException('not implemented yet');
+    }
 }

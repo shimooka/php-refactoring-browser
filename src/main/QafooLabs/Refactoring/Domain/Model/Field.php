@@ -11,30 +11,32 @@
  * to kontakt@beberlei.de so I can send you a copy immediately.
  */
 
+
 namespace QafooLabs\Refactoring\Domain\Model;
 
 /**
- * Representation of a method signature and all its parts (name, visibility, arguments, returnVariables).
+ * Represent a variable in the refactoring domain.
  */
-class MethodSignature
+class Field
 {
     const IS_PUBLIC = 1;
     const IS_PRIVATE = 2;
     const IS_PROTECTED = 4;
     const IS_STATIC = 8;
     const IS_FINAL = 16;
+    const IS_CONST = 32;
 
     private $name;
     private $flags;
-    private $arguments;
-    private $returnVariables;
 
-    public function __construct($name, $flags = self::IS_PRIVATE, array $arguments = array(), $returnVariables = array())
+    public function __construct($name, $flags = self::IS_PRIVATE)
     {
-        $this->name = $name;
+        if (preg_match('(([\s;\(\)]+))', $name)) {
+            throw RefactoringException::illegalFieldName($name);
+        }
+
+        $this->name = ltrim($name, '$');
         $this->flags = $this->change($flags);
-        $this->arguments = $arguments;
-        $this->returnVariables = $returnVariables;
     }
 
     private function change($flags)
@@ -53,13 +55,24 @@ class MethodSignature
         return $flags;
     }
 
+    /**
+     * @return string
+     */
     public function getName()
     {
         return $this->name;
     }
 
     /**
-     * Is this method private?
+     * @return string
+     */
+    public function getToken()
+    {
+        return '$' . $this->name;
+    }
+
+    /**
+     * Is this field private?
      *
      * @return bool
      */
@@ -69,7 +82,7 @@ class MethodSignature
     }
 
     /**
-     * Is this method protected?
+     * Is this field protected?
      *
      * @return bool
      */
@@ -79,7 +92,7 @@ class MethodSignature
     }
 
     /**
-     * Is this method public?
+     * Is this field public?
      *
      * @return bool
      */
@@ -89,7 +102,7 @@ class MethodSignature
     }
 
     /**
-     * Is this method static?
+     * Is this field static?
      *
      * @return bool
      */
@@ -99,7 +112,7 @@ class MethodSignature
     }
 
     /**
-     * Is this method final?
+     * Is this field final?
      *
      * @return bool
      */
@@ -109,18 +122,35 @@ class MethodSignature
     }
 
     /**
-     * @return array
+     * Is this field const?
+     *
+     * @return bool
      */
-    public function returnVariables()
+    public function isConst()
     {
-        return $this->returnVariables;
+        return ($this->flags & self::IS_CONST) > 0;
     }
 
     /**
-     * @return array
+     * @return string
      */
-    public function arguments()
+    public function getCamelName()
     {
-        return $this->arguments;
+        $parts = array();
+        foreach (explode('_', $this->getName()) as $word) {
+            $parts[] = ucfirst(strtolower($word));
+        }
+
+        return join($parts);
+    }
+
+    public function convertToGetter()
+    {
+        return new Variable('$this->get' . $this->getCamelName());
+    }
+
+    public function convertToSetter()
+    {
+        return new Variable('$this->set' . $this->getCamelName());
     }
 }

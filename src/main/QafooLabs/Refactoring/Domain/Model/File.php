@@ -61,4 +61,12 @@ class File
     {
         return $this->code;
     }
+
+    /**
+     * @return LineRange
+     */
+    public function getLineRange()
+    {
+        return LineRange::fromLines(1, count(explode(PHP_EOL, $this->code)));
+    }
 }

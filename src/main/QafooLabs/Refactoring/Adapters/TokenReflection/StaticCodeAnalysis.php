@@ -37,7 +37,7 @@ class StaticCodeAnalysis extends CodeAnalysis
         $lastLine = $range->getEnd();
 
         foreach ($file->getNamespaces() as $namespace) {
-            foreach ($namespace->geTclasses() as $class) {
+            foreach ($namespace->getClasses() as $class) {
                 foreach ($class->getMethods() as $method) {
                     if ($method->getStartLine() < $lastLine && $lastLine < $method->getEndLine()) {
                         return $method->isStatic();
@@ -56,7 +56,7 @@ class StaticCodeAnalysis extends CodeAnalysis
         $lastLine = $range->getEnd();
 
         foreach ($file->getNamespaces() as $namespace) {
-            foreach ($namespace->geTclasses() as $class) {
+            foreach ($namespace->getClasses() as $class) {
                 foreach ($class->getMethods() as $method) {
                     if ($method->getStartLine() < $lastLine && $lastLine < $method->getEndLine()) {
                         return $method->getEndLine();
@@ -75,7 +75,7 @@ class StaticCodeAnalysis extends CodeAnalysis
         $lastLine = $range->getEnd();
 
         foreach ($file->getNamespaces() as $namespace) {
-            foreach ($namespace->geTclasses() as $class) {
+            foreach ($namespace->getClasses() as $class) {
                 foreach ($class->getMethods() as $method) {
                     if ($method->getStartLine() < $lastLine && $lastLine < $method->getEndLine()) {
                         return $method->getStartLine();
@@ -128,4 +128,85 @@ class StaticCodeAnalysis extends CodeAnalysis
 
         return false;
     }
+
+    public function isFieldStatic(File $file, LineRange $range)
+    {
+        $this->broker = new Broker(new Memory);
+        $file = $this->broker->processString($file->getCode(), $file->getRelativePath(), true);
+        $lastLine = $range->getEnd();
+
+        foreach ($file->getNamespaces() as $namespace) {
+            foreach ($namespace->getClasses() as $class) {
+                foreach ($class->getProperties() as $property) {
+                    if ($property->getStartLine() >= $range->getStart() && $range->getEnd() <= $property->getEndLine() && $property->isStatic()) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function getLineOfLastMethodDefinedEndLine(File $file, LineRange $range)
+    {
+        $lineOfLastPropertyDefined = $this->getLineOfLastPropertyDefined($file, $range);
+        $classEndLine = $this->getClassEndLine($file, $range);
+        $this->broker = new Broker(new Memory);
+        $file = $this->broker->processString($file->getCode(), $file->getRelativePath(), true);
+        $lastLine = $range->getEnd();
+
+        foreach ($file->getNamespaces() as $namespace) {
+            foreach ($namespace->getClasses() as $class) {
+                $lastMethodDefinitionEndLine = max($class->getStartLine() + 1, $lineOfLastPropertyDefined);
+                foreach ($class->getMethods() as $method) {
+                    if ($class->getStartLine() < $lastLine && $lastLine < $class->getEndLine()) {
+                        $lastMethodDefinitionEndLine = max($lastMethodDefinitionEndLine, $method->getEndLine());
+                    }
+                }
+            }
+        }
+
+        return $lastMethodDefinitionEndLine;
+    }
+
+    public function getLineOfLastPropertyDefined(File $file, LineRange $range)
+    {
+        $classEndLine = $this->getClassEndLine($file, $range);
+        $this->broker = new Broker(new Memory);
+        $file = $this->broker->processString($file->getCode(), $file->getRelativePath(), true);
+        $lastLine = $range->getEnd();
+
+        foreach ($file->getNamespaces() as $namespace) {
+            foreach ($namespace->getClasses() as $class) {
+                $lastPropertyDefinitionLine = $class->getStartLine() + 1;
+
+                foreach ($class->getProperties() as $property) {
+                    if ($class->getStartLine() < $lastLine && $lastLine < $class->getEndLine()) {
+                        $lastPropertyDefinitionLine = max($lastPropertyDefinitionLine, $property->getEndLine());
+                    }
+                }
+            }
+        }
+
+        return $lastPropertyDefinitionLine;
+    }
+
+    public function getClassEndLine(File $file, LineRange $range)
+    {
+        $this->broker = new Broker(new Memory);
+        $file = $this->broker->processString($file->getCode(), $file->getRelativePath(), true);
+        $lastLine = $range->getEnd();
+
+        foreach ($file->getNamespaces() as $namespace) {
+            foreach ($namespace->getClasses() as $class) {
+                if ($class->getStartLine() <= $lastLine && $lastLine <= $class->getEndLine()) {
+                    return $class->getEndLine();
+                }
+            }
+        }
+
+        throw new \InvalidArgumentException("Could not find class end line.");
+    }
+
 }

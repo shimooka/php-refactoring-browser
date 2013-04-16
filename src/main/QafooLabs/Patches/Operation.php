@@ -23,4 +23,11 @@ interface Operation
      * @return Hunk
      */
     public function perform(Hunk $hunk);
+
+    /**
+     * Merge lines into modified lines.
+     *
+     * @param array $mergeLines
+     */
+    public function merge(array $mergeLines);
 }

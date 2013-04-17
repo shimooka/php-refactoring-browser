@@ -35,30 +35,29 @@ class EncapsulateFieldCommand extends Command
     {
         $this
             ->setName('encapsulate-field')
-            ->setDescription('Convert a class field to an instance field.')
+            ->setDescription('Make a public field field private and privide accessors.')
             ->addArgument('file', InputArgument::REQUIRED, 'File that contains a class field.')
-            ->addArgument('line', InputArgument::REQUIRED, 'Line of one of the local fields occurrences.')
+            ->addArgument('line', InputArgument::REQUIRED, 'Line of the field.')
             ->addArgument('field', InputArgument::REQUIRED, 'Name of the field with or without $.')
             ->setHelp(<<<HELP
-If you want to convert a field that is local to a method to an instance field of
-that same class, the "convert local to instance field" refactoring helps you with this
-task.
+If you want to Make a field private and privide accessors,
+the "encapsulate field" refactoring helps you with this task.
 
 <comment>It will:</comment>
 
-1. Convert all occurrences of the same field within the method into an instance field of the same name.
-2. Create the instance field on the class.
+1. Make the field private.
+2. Create accessors (getXxx/setXxx methods) on the class to access the field.
 
 <comment>Pre-Conditions:</comment>
 
-1. Selected Variable does not exist on class (NOT CHECKED YET)
-2. Variable is a local field
+1. Accessors do not exist on class (NOT CHECKED YET)
+2. Variable is a field
 
 <comment>Usage:</comment>
 
     <info>php refactor.phar encapsulate-field file.php 10 hello</info>
 
-Will convert field \$hello into an instance field \$this->hello.
+Will make the field \$hello private and add getHello()/setHello(\$hello) methods.
 HELP
             )
         ;

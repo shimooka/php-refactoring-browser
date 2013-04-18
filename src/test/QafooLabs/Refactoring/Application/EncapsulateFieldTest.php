@@ -5,7 +5,6 @@ namespace QafooLabs\Refactoring\Application;
 use QafooLabs\Refactoring\Adapters\Patches\PatchEditor;
 use QafooLabs\Refactoring\Adapters\PHPParser\ParserVariableScanner;
 use QafooLabs\Refactoring\Adapters\TokenReflection\StaticCodeAnalysis;
-use QafooLabs\Refactoring\Domain\Model\Field;
 use QafooLabs\Refactoring\Domain\Model\File;
 
 class EncapsulateFieldTest extends \PHPUnit_Framework_TestCase
@@ -35,7 +34,7 @@ class Foo
     public $public_field;
 }
 PHP
-            ), 4, new Field("public_field"));
+            ), 4, "public_field");
 
 
         \Phake::verify($this->applyCommand)->apply(<<<'CODE'
@@ -78,7 +77,7 @@ class Foo
     }
 }
 PHP
-            ), 4, new Field("public_field"));
+            ), 4, "public_field");
 
 
         \Phake::verify($this->applyCommand)->apply(<<<'CODE'
@@ -127,7 +126,7 @@ class Foo
     }
 }
 PHP
-            ), 4, new Field("protected_field"));
+            ), 4, "protected_field");
 
 
         \Phake::verify($this->applyCommand)->apply(<<<'CODE'
@@ -176,7 +175,7 @@ class Foo
     }
 }
 PHP
-            ), 4, new Field("private_field"));
+            ), 4, "private_field");
 
 
         \Phake::verify($this->applyCommand)->apply(<<<'CODE'
@@ -226,7 +225,7 @@ class Foo
     }
 }
 PHP
-            ), 7, new Field("public_field"));
+            ), 7, "public_field");
     }
 
     /**
@@ -247,6 +246,56 @@ class Foo
     }
 }
 PHP
-            ), 4, new Field("bar"));
+            ), 4, "bar");
     }
+
+    /**
+     * @group integration
+     */
+    public function testRefactorStaticField()
+    {
+        $patch = $this->refactoring->refactor(new File("foo.php", <<<'PHP'
+<?php
+class Foo
+{
+    public static $field;
+
+    public function main()
+    {
+        echo self::$field;
+    }
+}
+PHP
+            ), 4, "field");
+
+
+        \Phake::verify($this->applyCommand)->apply(<<<'CODE'
+--- a/foo.php
++++ b/foo.php
+@@ -2,5 +2,5 @@
+ class Foo
+ {
+-    public static $field;
++    private static $field;
+ 
+     public function main()
+@@ -7,4 +7,14 @@
+     {
+         echo self::$field;
+     }
++
++    public static function getField()
++    {
++        return self::$field;
++    }
++
++    public static function setField($field)
++    {
++        self::$field = $field;
++    }
+ }
+CODE
+        );
+    }
+
 }

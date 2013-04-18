@@ -38,7 +38,7 @@ class EncapsulateField
         $this->editor = $editor;
     }
 
-    public function refactor(File $file, $line, Field $convertField)
+    public function refactor(File $file, $line, $fieldName)
     {
         $range = LineRange::fromSingleLine($line);
         if ($this->codeAnalysis->isInsideMethod($file, $range)) {
@@ -47,24 +47,25 @@ class EncapsulateField
 
 //        $definedFields = $this->variableScanner->scanForFields($file);
 
-//        if ( ! $definedFields->contains($convertField)) {
-//            throw RefactoringException::variableNotInRange($convertField, $selectedMethodLineRange);
+//        if ( ! $definedFields->contains($fieldName)) {
+//            throw RefactoringException::variableNotInRange($fieldName, $selectedMethodLineRange);
 //        }
+
+        $isStatic = $this->codeAnalysis->isFieldStatic($file, LineRange::fromSingleLine($line));
+        $lineOfLastMethodEndLine = $this->codeAnalysis->getLineOfLastMethodEndLine($file, $range);
+        $field = new Field($fieldName, MethodSignature::IS_PRIVATE + ($isStatic ? MethodSignature::IS_STATIC : 0));
 
         $buffer = $this->editor->openBuffer($file);
 
         $session = new EditingSession($buffer);
-        $session->replaceLineWithProperty(LineRange::fromSingleLine($line), $convertField);
-
-        $isStatic = $this->codeAnalysis->isFieldStatic($file, LineRange::fromSingleLine($line));
-        $lineOfLastMethodEndLine = $this->codeAnalysis->getLineOfLastMethodEndLine($file, $range);
+        $session->replaceLineWithProperty(LineRange::fromSingleLine($line), $field);
 
         $getterMethod = new MethodSignature(
-            'get' . $convertField->getCamelName(),
+            'get' . $field->getCamelName(),
             MethodSignature::IS_PUBLIC + ($isStatic ? MethodSignature::IS_STATIC : 0)
         );
         $code = sprintf('return %s%s;',
-            ($isStatic ? 'self::$' : '$this->'), $convertField->getName());
+            ($isStatic ? 'self::$' : '$this->'), $field->getName());
         $session->addMethod(
             $lineOfLastMethodEndLine,
             $getterMethod,
@@ -72,13 +73,13 @@ class EncapsulateField
         );
 
         $setterMethod = new MethodSignature(
-            'set' . $convertField->getCamelName(),
+            'set' . $field->getCamelName(),
             MethodSignature::IS_PUBLIC + ($isStatic ? MethodSignature::IS_STATIC : 0),
-            array($convertField->getName())
+            array($field->getName())
         );
         $code = sprintf('%s%s = $%s;', 
             ($isStatic ? 'self::$' : '$this->'),
-            $convertField->getName(), $convertField->getName());
+            $field->getName(), $field->getName());
         $session->addMethod(
             $lineOfLastMethodEndLine,
             $setterMethod,

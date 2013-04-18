@@ -158,8 +158,22 @@ class EditingSession
     public function replaceLineWithProperty(LineRange $range, Field $newField)
     {
         $this->buffer->replace($range, array(
-            $this->whitespace(4) . 'private $' . $newField->getName() . ';'
+            $this->whitespace(4) . $this->renderFieldDefinition($newField)
         ));
+    }
+
+    private function renderFieldDefinition(Field $field)
+    {
+        return sprintf(
+            '%s%s$%s;',
+            $field->isPrivate() ? 'private ' : (
+                $field->isProtected() ? 'protected ' : (
+                    $field->isPublic() ? 'public ' : ''
+                )
+            ),
+            $field->isStatic() ? 'static ' : '',
+            $field->getName()
+        );
     }
 
 }

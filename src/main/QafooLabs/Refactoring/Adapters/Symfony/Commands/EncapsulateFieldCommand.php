@@ -67,13 +67,13 @@ HELP
     {
         $file = File::createFromPath($input->getArgument('file'), getcwd());
         $line = (int)$input->getArgument('line');
-        $field = new Field($input->getArgument('field'));
+        $fieldName = $input->getArgument('field');
 
         $scanner = new ParserVariableScanner();
         $codeAnalysis = new StaticCodeAnalysis();
         $editor = new PatchEditor(new OutputPatchCommand($output));
 
         $convertRefactoring = new EncapsulateField($scanner, $codeAnalysis, $editor);
-        $convertRefactoring->refactor($file, $line, $field);
+        $convertRefactoring->refactor($file, $line, $fieldName);
     }
 }

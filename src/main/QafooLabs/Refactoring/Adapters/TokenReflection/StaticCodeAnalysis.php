@@ -148,7 +148,7 @@ class StaticCodeAnalysis extends CodeAnalysis
         return false;
     }
 
-    public function getLineOfLastMethodDefinedEndLine(File $file, LineRange $range)
+    public function getLineOfLastMethodEndLine(File $file, LineRange $range)
     {
         $lineOfLastPropertyDefined = $this->getLineOfLastPropertyDefined($file, $range);
         $classEndLine = $this->getClassEndLine($file, $range);

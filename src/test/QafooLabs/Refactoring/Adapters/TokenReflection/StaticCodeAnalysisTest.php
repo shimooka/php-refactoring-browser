@@ -290,9 +290,9 @@ PHP
         ));
     }
 
-    public function testGetLineOfLastMethodDefinedEndLine()
+    public function testGetLineOfLastMethodEndLine()
     {
-        $this->assertEquals(27, $this->analysis->getLineOfLastMethodDefinedEndLine(
+        $this->assertEquals(27, $this->analysis->getLineOfLastMethodEndLine(
             $this->file,
             LineRange::fromSingleLine(5)
         ));
@@ -308,7 +308,7 @@ class Foo
 }
 PHP
         );
-        $this->assertEquals(7, $this->analysis->getLineOfLastMethodDefinedEndLine(
+        $this->assertEquals(7, $this->analysis->getLineOfLastMethodEndLine(
             $this->file,
             LineRange::fromSingleLine(5)
         ));
@@ -320,7 +320,7 @@ class Foo
 }
 PHP
         );
-        $this->assertEquals(3, $this->analysis->getLineOfLastMethodDefinedEndLine(
+        $this->assertEquals(3, $this->analysis->getLineOfLastMethodEndLine(
             $this->file,
             LineRange::fromSingleLine(4)
         ));

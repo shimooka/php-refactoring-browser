@@ -45,11 +45,6 @@ class EncapsulateField
             throw RefactoringException::rangeIsNotOutsideMethod($range);
         }
 
-//        $isStatic = $this->codeAnalysis->isFieldStatic($file, LineRange::fromSingleLine($line));
-//        $getMethod = $convertField->convertToGetter();
-//        $lastPropertyLine = $this->codeAnalysis->getLineOfLastPropertyDefined($file);
-
-//        $selectedMethodLineRange = $this->codeAnalysis->findMethodRange($file, LineRange::fromSingleLine($line));
 //        $definedFields = $this->variableScanner->scanForFields($file);
 
 //        if ( ! $definedFields->contains($convertField)) {
@@ -60,30 +55,32 @@ class EncapsulateField
 
         $session = new EditingSession($buffer);
         $session->replaceLineWithProperty(LineRange::fromSingleLine($line), $convertField);
-//        $session->replaceString($definedVariables, $convertField, $getMethod);
-//        $session->replaceRangeWithMethodCall($file->getLineRange(), $convertField, $getMethod);
+
+        $isStatic = $this->codeAnalysis->isFieldStatic($file, LineRange::fromSingleLine($line));
+        $lineOfLastMethodEndLine = $this->codeAnalysis->getLineOfLastMethodEndLine($file, $range);
 
         $getterMethod = new MethodSignature(
             'get' . $convertField->getCamelName(),
-//            MethodSignature::IS_PUBLIC + ($isStatic ? MethodSignature::IS_STATIC : 0),
-            MethodSignature::IS_PUBLIC
+            MethodSignature::IS_PUBLIC + ($isStatic ? MethodSignature::IS_STATIC : 0)
         );
-        $code = sprintf('return $this->%s;', $convertField->getName());
+        $code = sprintf('return %s%s;',
+            ($isStatic ? 'self::$' : '$this->'), $convertField->getName());
         $session->addMethod(
-            $this->codeAnalysis->getLineOfLastMethodDefinedEndLine($file, $range),
+            $lineOfLastMethodEndLine,
             $getterMethod,
             array($code)
         );
 
         $setterMethod = new MethodSignature(
             'set' . $convertField->getCamelName(),
-//            MethodSignature::IS_PUBLIC + ($isStatic ? MethodSignature::IS_STATIC : 0),
-            MethodSignature::IS_PUBLIC,
+            MethodSignature::IS_PUBLIC + ($isStatic ? MethodSignature::IS_STATIC : 0),
             array($convertField->getName())
         );
-        $code = sprintf('$this->%s = $%s;', $convertField->getName(), $convertField->getName());
+        $code = sprintf('%s%s = $%s;', 
+            ($isStatic ? 'self::$' : '$this->'),
+            $convertField->getName(), $convertField->getName());
         $session->addMethod(
-            $this->codeAnalysis->getLineOfLastMethodDefinedEndLine($file, $range),
+            $lineOfLastMethodEndLine,
             $setterMethod,
             array($code)
         );

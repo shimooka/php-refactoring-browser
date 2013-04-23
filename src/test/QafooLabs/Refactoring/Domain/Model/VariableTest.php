@@ -46,4 +46,12 @@ class VariableTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($instance->isInstance());
         $this->assertFalse($local->isInstance());
     }
+
+    public function testCreateInstanceFromInstance_ThrowVariableNotLocal()
+    {
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Given variable "$this->var" is required to be local to the current method.');
+
+        $local = new Variable('$this->var');
+        $local->convertToInstance();
+    }
 }

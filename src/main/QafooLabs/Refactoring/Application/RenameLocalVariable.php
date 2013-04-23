@@ -9,7 +9,7 @@ use QafooLabs\Refactoring\Domain\Model\LineRange;
 use QafooLabs\Refactoring\Domain\Model\RefactoringException;
 use QafooLabs\Refactoring\Domain\Model\EditingSession;
 
-use QafooLabs\Refactoring\Domain\Services\VariableScanner;
+use QafooLabs\Refactoring\Domain\Services\ParserScanner;
 use QafooLabs\Refactoring\Domain\Services\CodeAnalysis;
 use QafooLabs\Refactoring\Domain\Services\Editor;
 
@@ -19,9 +19,9 @@ use QafooLabs\Refactoring\Domain\Services\Editor;
 class RenameLocalVariable
 {
     /**
-     * @var \QafooLabs\Refactoring\Domain\Services\VariableScanner
+     * @var \QafooLabs\Refactoring\Domain\Services\ParserScanner
      */
-    private $variableScanner;
+    private $variableParserScanner;
 
     /**
      * @var \QafooLabs\Refactoring\Domain\Services\CodeAnalysis
@@ -33,9 +33,9 @@ class RenameLocalVariable
      */
     private $editor;
 
-    public function __construct(VariableScanner $variableScanner, CodeAnalysis $codeAnalysis, Editor $editor)
+    public function __construct(ParserScanner $variableParserScanner, CodeAnalysis $codeAnalysis, Editor $editor)
     {
-        $this->variableScanner = $variableScanner;
+        $this->variableParserScanner = $variableParserScanner;
         $this->codeAnalysis = $codeAnalysis;
         $this->editor = $editor;
     }
@@ -55,7 +55,7 @@ class RenameLocalVariable
         }
 
         $selectedMethodLineRange = $this->codeAnalysis->findMethodRange($file, LineRange::fromSingleLine($line));
-        $definedVariables = $this->variableScanner->scanForVariables(
+        $definedVariables = $this->variableParserScanner->scan(
             $file, $selectedMethodLineRange
         );
 

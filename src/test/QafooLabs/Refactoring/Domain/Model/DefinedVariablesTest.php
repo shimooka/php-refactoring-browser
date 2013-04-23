@@ -12,7 +12,7 @@ class DefinedVariablesTest extends \PHPUnit_Framework_TestCase
         $selectedRange = new DefinedVariables(array('foo' => array(1)), array('foo' => array(1)));
         $methodRange = new DefinedVariables(array('foo' => array(1, 2)), array('foo' => array(1, 2)));
 
-        $variables = $methodRange->variablesFromSelectionUsedAfter($selectedRange);
+        $variables = $methodRange->selectionUsedAfter($selectedRange);
 
         $this->assertEquals(array('foo'), $variables);
     }

@@ -20,11 +20,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
 
 use QafooLabs\Refactoring\Domain\Model\File;
-use QafooLabs\Refactoring\Domain\Model\Variable;
-use QafooLabs\Refactoring\Domain\Model\Field;
 
 use QafooLabs\Refactoring\Application\EncapsulateField;
-use QafooLabs\Refactoring\Adapters\PHPParser\ParserVariableScanner;
+use QafooLabs\Refactoring\Adapters\PHPParser\ParserFieldScanner;
 use QafooLabs\Refactoring\Adapters\TokenReflection\StaticCodeAnalysis;
 use QafooLabs\Refactoring\Adapters\Patches\PatchEditor;
 use QafooLabs\Refactoring\Adapters\Symfony\OutputPatchCommand;
@@ -67,13 +65,13 @@ HELP
     {
         $file = File::createFromPath($input->getArgument('file'), getcwd());
         $line = (int)$input->getArgument('line');
-        $fieldName = $input->getArgument('field');
+        $field = $input->getArgument('field');
 
-        $scanner = new ParserVariableScanner();
+        $scanner = new ParserFieldScanner();
         $codeAnalysis = new StaticCodeAnalysis();
         $editor = new PatchEditor(new OutputPatchCommand($output));
 
         $convertRefactoring = new EncapsulateField($scanner, $codeAnalysis, $editor);
-        $convertRefactoring->refactor($file, $line, $fieldName);
+        $convertRefactoring->refactor($file, $line, $field);
     }
 }

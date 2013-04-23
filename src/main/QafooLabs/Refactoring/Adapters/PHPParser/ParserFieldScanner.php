@@ -16,11 +16,11 @@ namespace QafooLabs\Refactoring\Adapters\PHPParser;
 
 use QafooLabs\Refactoring\Domain\Model\LineRange;
 use QafooLabs\Refactoring\Domain\Model\File;
-use QafooLabs\Refactoring\Domain\Model\DefinedVariables;
+use QafooLabs\Refactoring\Domain\Model\DefinedFields;
 use QafooLabs\Refactoring\Domain\Services\ParserScanner;
 
 use QafooLabs\Refactoring\Adapters\PHPParser\Visitor\LineRangeStatementCollector;
-use QafooLabs\Refactoring\Adapters\PHPParser\Visitor\LocalVariableClassifier;
+use QafooLabs\Refactoring\Adapters\PHPParser\Visitor\FieldClassifier;
 
 use PHPParser_Parser;
 use PHPParser_Lexer;
@@ -29,7 +29,7 @@ use PHPParser_Node_Stmt;
 use PHPParser_Node_Expr_FuncCall;
 use PHPParser_NodeTraverser;
 
-class ParserVariableScanner implements ParserScanner
+class ParserFieldScanner implements ParserScanner
 {
     public function scan(File $file, LineRange $range)
     {
@@ -50,14 +50,11 @@ class ParserVariableScanner implements ParserScanner
             throw new \RuntimeException("No statements found in line range.");
         }
 
-        $localVariableClassifier = new LocalVariableClassifier();
+        $fieldClassifier = new FieldClassifier();
         $traverser     = new PHPParser_NodeTraverser;
-        $traverser->addVisitor($localVariableClassifier);
+        $traverser->addVisitor($fieldClassifier);
         $traverser->traverse($selectedStatements);
 
-        $localVariables = $localVariableClassifier->getUsedLocalVariables();
-        $assignments = $localVariableClassifier->getAssignments();
-
-        return new DefinedVariables($localVariables, $assignments);
+        return new DefinedFields($fieldClassifier->getFields());
     }
 }

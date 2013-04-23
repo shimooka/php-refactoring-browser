@@ -17,7 +17,7 @@ namespace QafooLabs\Refactoring\Domain\Model;
 /**
  * Represent a variable in the refactoring domain.
  */
-class Field
+class Field implements Element
 {
     const IS_PUBLIC = 1;
     const IS_PRIVATE = 2;

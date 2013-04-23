@@ -58,4 +58,12 @@ class RefactoringException extends Exception
     {
         return new self(sprintf('The given field name "%s" is not valid in PHP.', $name));
     }
+
+    static public function fieldNotInRange($fieldName, LineRange $range)
+    {
+        return new self(sprintf('Could not find field "%s" in line %d.',
+            $fieldName, $range->getStart()
+        ));
+    }
+
 }

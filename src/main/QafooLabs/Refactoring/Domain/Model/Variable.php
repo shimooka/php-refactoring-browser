@@ -17,7 +17,7 @@ namespace QafooLabs\Refactoring\Domain\Model;
 /**
  * Represent a variable in the refactoring domain.
  */
-class Variable
+class Variable implements Element
 {
     private $name;
 

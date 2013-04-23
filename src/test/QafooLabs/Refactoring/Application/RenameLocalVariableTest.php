@@ -5,110 +5,106 @@ namespace QafooLabs\Refactoring\Application;
 use QafooLabs\Refactoring\Domain\Model\File;
 use QafooLabs\Refactoring\Domain\Model\LineRange;
 use QafooLabs\Refactoring\Domain\Model\Variable;
-use QafooLabs\Refactoring\Domain\Model\DefinedVariables;
-
 use QafooLabs\Refactoring\Adapters\PHPParser\ParserVariableScanner;
 use QafooLabs\Refactoring\Adapters\TokenReflection\StaticCodeAnalysis;
 use QafooLabs\Refactoring\Adapters\Patches\PatchEditor;
 
 class RenameLocalVariableTest extends \PHPUnit_Framework_TestCase
 {
+    private $applyCommand;
+
     public function setUp()
     {
-        $this->scanner = \Phake::mock('QafooLabs\Refactoring\Domain\Services\VariableScanner');
-        $this->codeAnalysis = \Phake::mock('QafooLabs\Refactoring\Domain\Services\CodeAnalysis');
-        $this->editor = \Phake::mock('QafooLabs\Refactoring\Domain\Services\Editor');
-        $this->refactoring = new RenameLocalVariable($this->scanner, $this->codeAnalysis, $this->editor);
+        $this->applyCommand = \Phake::mock('QafooLabs\Refactoring\Adapters\Patches\ApplyPatchCommand');
 
-        \Phake::when($this->codeAnalysis)->isInsideMethod(\Phake::anyParameters())->thenReturn(true);
+        $scanner = new ParserVariableScanner();
+        $codeAnalysis = new StaticCodeAnalysis();
+        $editor = new PatchEditor($this->applyCommand);
+
+        $this->refactoring = new RenameLocalVariable($scanner, $codeAnalysis, $editor);
     }
 
-    public function testRenameLocalVariable()
+    /**
+     * @group integration
+     */
+    public function testRefactorSimpleMethod()
     {
-        $buffer = \Phake::mock('QafooLabs\Refactoring\Domain\Model\EditorBuffer');
-
-        \Phake::when($this->scanner)->scanForVariables(\Phake::anyParameters())->thenReturn(
-            new DefinedVariables(array('helloWorld' => array(6)))
-        );
-        \Phake::when($this->editor)->openBuffer(\Phake::anyParameters())->thenReturn($buffer);
-        \Phake::when($this->codeAnalysis)->findMethodRange(\Phake::anyParameters())->thenReturn(LineRange::fromSingleLine(1));
-
         $patch = $this->refactoring->refactor(new File("foo.php", <<<'PHP'
 <?php
-class Foo
+class Calculator
 {
-    public function main()
+    public function calculate($a, $b, $op)
     {
-        $helloWorld = 'bar';
+        if ($op === '+') {
+            $result = $a + $b;
+        }
+
+        return $result;
     }
 }
 PHP
-            ), 6, new Variable('$helloWorld'), new Variable('$var'));
-
-        \Phake::verify($buffer)->replaceString(6, '$helloWorld', '$var');
-    }
-
-    public function testRenameNonLocalVariable_ThrowsException()
-    {
-        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Given variable "$this->foo" is required to be local to the current method.');
-
-        $this->refactoring->refactor(
-            new File("foo.php", ''), 6,
-            new Variable('$this->foo'),
-            new Variable('$foo')
-        );
-    }
-
-    public function testRenameIntoNonLocalVariable_ThrowsException()
-    {
-        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Given variable "$this->foo" is required to be local to the current method.');
-
-        $this->refactoring->refactor(
-            new File("foo.php", ''), 6,
-            new Variable('$foo'),
-            new Variable('$this->foo')
+            ), 7, new Variable("a"), new Variable("c"));
+        \Phake::verify($this->applyCommand)->apply(<<<'CODE'
+--- a/foo.php
++++ b/foo.php
+@@ -2,8 +2,8 @@
+ class Calculator
+ {
+-    public function calculate($a, $b, $op)
++    public function calculate($c, $b, $op)
+     {
+         if ($op === '+') {
+-            $result = $a + $b;
++            $result = $c + $b;
+         }
+ 
+CODE
         );
     }
 
     /**
      * @group integration
      */
-    public function testRenameRangeOutsideOfMethod_ThrowException()
+    public function testRefactorSimpleMethod_ThrowRangeIsNotInsideMethod()
     {
-        \Phake::when($this->codeAnalysis)->isInsideMethod(\Phake::anyParameters())->thenReturn(false);
-        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'The range 6-6 is not inside one single method.');
-        $this->refactoring->refactor(
-            new File("foo.php", ''), 6,
-            new Variable('$helloWorld'),
-            new Variable('$var')
-        );
-    }
-
-    /**
-     * @group integration
-     */
-    public function testRenameVariableNotInRange_ThrowException()
-    {
-        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Could not find variable "$hello" in line range 6-6.');
-        $buffer = \Phake::mock('QafooLabs\Refactoring\Domain\Model\EditorBuffer');
-
-        \Phake::when($this->scanner)->scanForVariables(\Phake::anyParameters())->thenReturn(
-            new DefinedVariables(array('helloWorld' => array(6)))
-        );
-        \Phake::when($this->editor)->openBuffer(\Phake::anyParameters())->thenReturn($buffer);
-        \Phake::when($this->codeAnalysis)->findMethodRange(\Phake::anyParameters())->thenReturn(LineRange::fromSingleLine(6));
-
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'The range 3-3 is not inside one single method.');
         $this->refactoring->refactor(new File("foo.php", <<<'PHP'
 <?php
-class Foo
+class Calculator
 {
-    public function main()
+    public function calculate($a, $b, $op)
     {
-        $helloWorld = 'bar';
+        if ($op === '+') {
+            $result = $a + $b;
+        }
+
+        return $result;
     }
 }
 PHP
-            ), 6, new Variable('$hello'), new Variable('$var'));
+            ), 3, new Variable("a"), new Variable("c"));
     }
 
+    /**
+     * @group integration
+     */
+    public function testRefactorSimpleMethod_ThrowVariableNotInRange()
+    {
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Could not find variable "$c" in line range 4-11');
+        $this->refactoring->refactor(new File("foo.php", <<<'PHP'
+<?php
+class Calculator
+{
+    public function calculate($a, $b, $op)
+    {
+        if ($op === '+') {
+            $result = $a + $b;
+        }
+
+        return $result;
+    }
+}
+PHP
+            ), 7, new Variable("c"), new Variable("d"));
+    }
 }

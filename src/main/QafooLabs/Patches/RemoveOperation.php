@@ -29,6 +29,6 @@ class RemoveOperation implements Operation
 
     public function merge(array $mergeLines)
     {
-        throw \BadMethodCallException('not implemented yet');
+        throw \BadMethodCallException('cannot merge');
     }
 }

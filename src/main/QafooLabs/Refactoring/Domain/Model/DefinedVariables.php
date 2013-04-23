@@ -19,7 +19,7 @@ use Closure;
 /**
  * Defined variables that are used or assigned.
  */
-class DefinedVariables
+class DefinedVariables implements DefinedElements
 {
     /**
      * Name of variables that are "used" locally.
@@ -73,7 +73,7 @@ class DefinedVariables
      *
      * @return bool
      */
-    public function contains(Variable $variable)
+    public function contains(Element $variable)
     {
         return (
             isset($this->readAccess[$variable->getName()]) ||
@@ -81,9 +81,9 @@ class DefinedVariables
         );
     }
 
-    public function variablesFromSelectionUsedAfter(DefinedVariables $selection)
+    public function selectionUsedAfter(DefinedVariables $selection)
     {
-        return $this->filterVariablesFromSelection(
+        return $this->filterFromSelection(
             $selection->changed(),
             $selection,
             function ($lastUsedLine, $endLine) {
@@ -91,9 +91,9 @@ class DefinedVariables
             }, 'max');
     }
 
-    public function variablesFromSelectionUsedBefore(DefinedVariables $selection)
+    public function selectionUsedBefore(DefinedVariables $selection)
     {
-        return $this->filterVariablesFromSelection(
+        return $this->filterFromSelection(
             $selection->read(),
             $selection,
             function ($lastUsedLine, $endLine) {
@@ -101,7 +101,7 @@ class DefinedVariables
             }, 'min');
     }
 
-    private function filterVariablesFromSelection($selectedVariables, DefinedVariables $selection, Closure $filter, $reducer)
+    private function filterFromSelection($selectedVariables, DefinedVariables $selection, Closure $filter, $reducer)
     {
         $variablesUsed = array();
 

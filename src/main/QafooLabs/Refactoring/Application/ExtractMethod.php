@@ -8,7 +8,7 @@ use QafooLabs\Refactoring\Domain\Model\MethodSignature;
 use QafooLabs\Refactoring\Domain\Model\EditingSession;
 use QafooLabs\Refactoring\Domain\Model\RefactoringException;
 
-use QafooLabs\Refactoring\Domain\Services\VariableScanner;
+use QafooLabs\Refactoring\Domain\Services\ParserScanner;
 use QafooLabs\Refactoring\Domain\Services\CodeAnalysis;
 use QafooLabs\Refactoring\Domain\Services\Editor;
 
@@ -18,9 +18,9 @@ use QafooLabs\Refactoring\Domain\Services\Editor;
 class ExtractMethod
 {
     /**
-     * @var \QafooLabs\Refactoring\Domain\Services\VariableScanner
+     * @var \QafooLabs\Refactoring\Domain\Services\ParserScanner
      */
-    private $variableScanner;
+    private $variableParserScanner;
 
     /**
      * @var \QafooLabs\Refactoring\Domain\Services\CodeAnalysis
@@ -32,9 +32,9 @@ class ExtractMethod
      */
     private $editor;
 
-    public function __construct(VariableScanner $variableScanner, CodeAnalysis $codeAnalysis, Editor $editor)
+    public function __construct(ParserScanner $variableParserScanner, CodeAnalysis $codeAnalysis, Editor $editor)
     {
-        $this->variableScanner = $variableScanner;
+        $this->variableParserScanner = $variableParserScanner;
         $this->codeAnalysis = $codeAnalysis;
         $this->editor = $editor;
     }
@@ -49,16 +49,16 @@ class ExtractMethod
         $methodRange = $this->codeAnalysis->findMethodRange($file, $extractRange);
         $selectedCode = $extractRange->sliceCode($file->getCode());
 
-        $extractVariables = $this->variableScanner->scanForVariables($file, $extractRange);
-        $methodVariables = $this->variableScanner->scanForVariables($file, $methodRange);
+        $extractVariables = $this->variableParserScanner->scan($file, $extractRange);
+        $methodVariables = $this->variableParserScanner->scan($file, $methodRange);
 
         $buffer = $this->editor->openBuffer($file);
 
         $newMethod = new MethodSignature(
             $newMethodName,
             $isStatic ? MethodSignature::IS_STATIC : 0,
-            $methodVariables->variablesFromSelectionUsedBefore($extractVariables),
-            $methodVariables->variablesFromSelectionUsedAfter($extractVariables)
+            $methodVariables->selectionUsedBefore($extractVariables),
+            $methodVariables->selectionUsedAfter($extractVariables)
         );
 
         $session = new EditingSession($buffer);

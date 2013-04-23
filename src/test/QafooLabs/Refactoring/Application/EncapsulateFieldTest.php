@@ -3,7 +3,7 @@
 namespace QafooLabs\Refactoring\Application;
 
 use QafooLabs\Refactoring\Adapters\Patches\PatchEditor;
-use QafooLabs\Refactoring\Adapters\PHPParser\ParserVariableScanner;
+use QafooLabs\Refactoring\Adapters\PHPParser\ParserFieldScanner;
 use QafooLabs\Refactoring\Adapters\TokenReflection\StaticCodeAnalysis;
 use QafooLabs\Refactoring\Domain\Model\File;
 
@@ -15,7 +15,7 @@ class EncapsulateFieldTest extends \PHPUnit_Framework_TestCase
     {
         $this->applyCommand = \Phake::mock('QafooLabs\Refactoring\Adapters\Patches\ApplyPatchCommand');
 
-        $scanner = new ParserVariableScanner();
+        $scanner = new ParserFieldScanner();
         $codeAnalysis = new StaticCodeAnalysis();
         $editor = new PatchEditor($this->applyCommand);
 
@@ -233,7 +233,7 @@ PHP
      */
     public function testRefactor_ThrowVariableNotInRange()
     {
-        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'The range 7-7 is not outside one single method');
+        $this->setExpectedException('QafooLabs\Refactoring\Domain\Model\RefactoringException', 'Could not find field "bar" in line 4.');
         $this->refactoring->refactor(new File("foo.php", <<<'PHP'
 <?php
 class Foo

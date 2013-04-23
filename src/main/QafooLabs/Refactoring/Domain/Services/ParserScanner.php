@@ -6,12 +6,12 @@ use QafooLabs\Refactoring\Domain\Model\LineRange;
 use QafooLabs\Refactoring\Domain\Model\File;
 use QafooLabs\Refactoring\Domain\Model\DefinedVariables;
 
-interface VariableScanner
+interface ParserScanner
 {
     /**
-     * Scan a line range within a file for defined variables.
+     * Scan a line range within a file.
      *
      * @return DefinedVariables
      */
-    public function scanForVariables(File $file, LineRange $range);
+    public function scan(File $file, LineRange $range);
 }

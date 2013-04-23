@@ -10,16 +10,16 @@ use QafooLabs\Refactoring\Domain\Model\Field;
 use QafooLabs\Refactoring\Domain\Model\RefactoringException;
 use QafooLabs\Refactoring\Domain\Model\EditingSession;
 
-use QafooLabs\Refactoring\Domain\Services\VariableScanner;
+use QafooLabs\Refactoring\Domain\Services\ParserScanner;
 use QafooLabs\Refactoring\Domain\Services\CodeAnalysis;
 use QafooLabs\Refactoring\Domain\Services\Editor;
 
 class EncapsulateField
 {
     /**
-     * @var \QafooLabs\Refactoring\Domain\Services\VariableScanner
+     * @var \QafooLabs\Refactoring\Domain\Services\ParserScanner
      */
-    private $variableScanner;
+    private $fieldParserScanner;
 
     /**
      * @var \QafooLabs\Refactoring\Domain\Services\CodeAnalysis
@@ -31,9 +31,9 @@ class EncapsulateField
      */
     private $editor;
 
-    public function __construct(VariableScanner $variableScanner, CodeAnalysis $codeAnalysis, Editor $editor)
+    public function __construct(ParserScanner $fieldParserScanner, CodeAnalysis $codeAnalysis, Editor $editor)
     {
-        $this->variableScanner = $variableScanner;
+        $this->fieldParserScanner = $fieldParserScanner;
         $this->codeAnalysis = $codeAnalysis;
         $this->editor = $editor;
     }
@@ -45,11 +45,11 @@ class EncapsulateField
             throw RefactoringException::rangeIsNotOutsideMethod($range);
         }
 
-//        $definedFields = $this->variableScanner->scanForFields($file);
+        $definedFields = $this->fieldParserScanner->scan($file, $range);
 
-//        if ( ! $definedFields->contains($fieldName)) {
-//            throw RefactoringException::variableNotInRange($fieldName, $selectedMethodLineRange);
-//        }
+        if ( ! $definedFields->contains(new Field($fieldName))) {
+            throw RefactoringException::fieldNotInRange($fieldName, $range);
+        }
 
         $isStatic = $this->codeAnalysis->isFieldStatic($file, LineRange::fromSingleLine($line));
         $lineOfLastMethodEndLine = $this->codeAnalysis->getLineOfLastMethodEndLine($file, $range);
